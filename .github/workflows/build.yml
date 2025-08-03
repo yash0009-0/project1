@@ -1,4 +1,4 @@
-name: CI
+name: Build APK
 
 on:
   push:
@@ -12,10 +12,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get Date
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Get current date
         id: get-date
-        shell: bash
-        run: echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+        run: echo "date=$(date +'%Y%m%d')" >> "$GITHUB_OUTPUT"
 
       - name: Cache Buildozer global directory
         uses: actions/cache@v2
@@ -29,15 +33,15 @@ jobs:
           path: .buildozer
           key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
 
-      - name: Build with Buildozer
+      - name: Build APK with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
           command: buildozer android debug
           buildozer_version: stable
 
-      - name: Upload artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v2
         with:
-          name: package
+          name: app-debug.apk
           path: ${{ steps.buildozer.outputs.filename }}
